@@ -8,7 +8,7 @@ As students and professionals increasingly rely on large language models for cod
 
 ## Solution
 
-RedactAI is a browser extension and local backend service that autonomously analyzes user input for sensitive information before it is sent to an LLM. The tool runs entirely on the user's device, combining AI-based semantic classification with deterministic secret detection to decide whether a prompt is safe, risky, or should be blocked. Users receive immediate risk assessments, and only proceed if the content is deemed safe, ensuring sensitive data never leaves the device unintentionally.
+RedactAI is a browser extension and local backend service that autonomously analyzes user input for sensitive information before it is sent to an LLM. The tool runs entirely on the user's device, combining AI-based semantic classification with deterministic secret detection to provide real-time risk assessments. Users receive immediate warnings about potentially sensitive content and can make informed decisions about whether to proceed.
 
 ## Features
 
@@ -18,19 +18,20 @@ RedactAI is a browser extension and local backend service that autonomously anal
 - Regex-based pattern matching for secrets and credentials
 - Risk scoring system (0-100 scale)
 - Visual popup warnings before submission
-- Automatic blocking of high-risk content
+- Two-tier decision system: SAFE (no warning) or WARN (user chooses to proceed or cancel)
 
 ### Security & Compliance
-- Fully local AI processing (no external API calls/third party service for detection for privacy)
-- Email notifications to administrators when sensitive content is detected
+- Fully local AI processing using Sentence Transformers (no external API calls for detection)
+- Email notifications to administrators when users proceed despite warnings
+- Platform detection (ChatGPT, Claude.ai, DeepSeek)
 - Comprehensive audit logging of all scan attempts
 - User confirmation emails for transparency
 
 ### User Experience
 - Browser extension for ChatGPT, Claude.ai, and DeepSeek
-- Persistent on-screen indicator showing protection status
-- Web dashboard for scan history and configuration
+- Web dashboard for scan history and manual text analysis
 - User authentication and session management
+- Intuitive warning popups with clear explanations
 
 ## Technologies Used
 
@@ -45,7 +46,7 @@ RedactAI is a browser extension and local backend service that autonomously anal
 - **Sentence Transformers** (all-MiniLM-L6-v2) - Local embedding model for semantic analysis
 - **Scikit-learn** - Machine learning library for classification
 - **Logistic Regression** - Classification algorithm for content categorization
-- **NumPy & Pandas** - Data manipulation and numerical computing
+- **NumPy** - Numerical computing library
 
 ### Security & Authentication
 - **Argon2** - Modern password hashing algorithm
@@ -61,6 +62,7 @@ RedactAI is a browser extension and local backend service that autonomously anal
 ### Email & Notifications
 - **SMTP** - Email protocol for notifications
 - **smtplib** - Python SMTP client
+- **Gmail SMTP** - Email delivery service
 
 ## Architecture
 ```
@@ -95,6 +97,7 @@ SQLite Database + Email Notifier
 - Python 3.13 or higher
 - Google Chrome browser
 - Git
+- Gmail account with 2-Factor Authentication (for email notifications)
 
 ### Installation
 
@@ -128,28 +131,32 @@ This will:
 - Save the trained model to `src/models/classifier.pkl`
 - Display training accuracy
 
-#### 4. Configure Email Notifications (Optional)
+#### 4. Configure Email Notifications
 
 Create a `.env` file in the project root:
 ```
 SMTP_SERVER=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USERNAME=your-email@gmail.com
-SMTP_PASSWORD=your-app-password
+SMTP_PASSWORD=your-16-char-app-password
 SMTP_FROM_EMAIL=your-email@gmail.com
 ```
 
-For Gmail:
-1. Enable 2-Factor Authentication
-2. Generate an App Password at https://myaccount.google.com/apppasswords
-3. Use the app password in the `.env` file
+**To get a Gmail app password:**
+1. Enable 2-Factor Authentication on your Google account
+2. Go to https://myaccount.google.com/apppasswords
+3. Select "Mail" and generate a password
+4. Copy the 16-character password (remove spaces)
+5. Use this password in the `.env` file
+
+**Note:** The SMTP credentials configure the email service used to send notifications. The administrator email is set during user account creation.
 
 #### 5. Start the Backend Server
 ```bash
 python run.py
 ```
 
-The server will start at `http://localhost:8000`
+The server will start at http://localhost:8000
 
 You should see:
 ```
@@ -160,13 +167,13 @@ RedactAI is running!
 
 #### 6. Create a User Account
 
-1. Open browser and go to `http://localhost:8000`
+1. Open browser and go to http://localhost:8000
 2. Click "Sign up"
 3. Fill in the registration form:
    - Username
    - Your email address
    - Password (minimum 6 characters)
-   - Administrator email (for notifications)
+   - Administrator email (receives notifications when you proceed despite warnings)
 4. Click "Create Account"
 5. You will be automatically logged in and redirected to the dashboard
 
@@ -181,46 +188,46 @@ RedactAI is running!
 #### 8. Test the Extension
 
 1. Go to https://chatgpt.com
-2. Look for the "RedactAI Active" indicator in the bottom-left corner
-3. Type a test message with sensitive content:
+2. Type a test message with sensitive content:
 ```
-   My AWS access key is AKIAIOSFODNN7EXAMPLE
-   Password: admin123
-   Database: postgres://user:pass@localhost
+   My email is test@example.com and my API key is sk_live_abc123xyz
 ```
-4. Click the Send button
-5. A popup should appear warning about the sensitive content
-6. You can either cancel to edit or proceed (which will trigger email notifications)
+3. Click the Send button
+4. A popup should appear warning about the sensitive content
+5. Click "Cancel & Edit" to revise, or "Proceed Anyway" to send (this will trigger email notifications to your administrator)
 
 ### Troubleshooting
 
 #### Extension Not Working
 - Check browser console (F12) for error messages
-- Verify the backend server is running
-- Ensure you're logged in at `http://localhost:8000`
+- Verify the backend server is running with `python run.py`
+- Ensure you're logged in at http://localhost:8000
 - Reload the extension at `chrome://extensions/`
 
 #### Email Not Sending
-- Verify `.env` file exists and has correct credentials
+- Verify `.env` file exists in project root with correct credentials
+- Check that you're using a Gmail app password, not your regular password
 - Check spam folder for emails
-- Ensure 2FA is enabled for Gmail
-- Test with a different SMTP provider if needed
+- Run `python test_email.py` to test email configuration
+- Review terminal output for error messages
 
 #### Model Not Loading
 - Run `python train_classifier.py` to create the model
 - Verify `src/models/classifier.pkl` exists
 - Check file permissions
 
+#### Database Issues
+- Delete `data/redactai.db` and restart server to recreate database
+- Run `python view_db.py` to inspect database contents
+
 ## Project Structure
 ```
 RedactAI/
 ├── src/
 │   ├── detector/
-│   │   ├── __init__.py
 │   │   ├── regex_detector.py      # Pattern matching for secrets
 │   │   ├── ai_classifier.py       # ML-based semantic analysis
 │   │   └── detection_engine.py    # Combined detection logic
-│   ├── __init__.py
 │   ├── main.py                    # FastAPI application
 │   ├── database.py                # Database models and setup
 │   ├── schemas.py                 # Pydantic models
@@ -232,17 +239,18 @@ RedactAI/
 │   ├── background.js              # Background service worker
 │   ├── popup.html                 # Extension popup UI
 │   ├── popup.js                   # Popup logic
-│   ├── styles.css                 # Styling for overlays
-│   └── icons/                     # Extension icons
+│   └── styles.css                 # Styling for overlays
 ├── templates/
 │   ├── base.html
 │   ├── login.html
 │   ├── signup.html
 │   └── dashboard.html
 ├── data/                          # SQLite database (created on first run)
-├── logs/                          # Application logs
 ├── requirements.txt               # Python dependencies
 ├── run.py                         # Server startup script
+├── train_classifier.py            # Script to train AI model
+├── view_db.py                     # Script to view database contents
+├── test_email.py                  # Script to test email configuration
 ├── .env                           # Environment variables (create this)
 ├── .gitignore
 └── README.md
@@ -259,14 +267,42 @@ The AI classifier categorizes content into four main types:
 
 ## Risk Levels
 
-- **SAFE (0-39)**: Content can be sent without warnings
-- **WARN (40-69)**: User receives a warning but can proceed
-- **BLOCK (70-100)**: High-risk content, administrator notified if user proceeds
+- **SAFE (0-29)**: Content can be sent without warnings
+- **WARN (30-100)**: User receives a warning and can choose to proceed or cancel
 
-## Development
+## How It Works
 
-### Running Tests
-```bash
-python -m pytest tests/
-```
+1. **Browser Extension Monitors Input**: The Chrome extension monitors text input on ChatGPT, Claude.ai, and DeepSeek
+2. **Real-Time Analysis**: When you click Send, the extension intercepts the submission and sends the text to the local backend for analysis
+3. **Detection Engine**: The backend combines regex pattern matching with AI semantic classification to assess risk
+4. **User Decision**: If sensitive content is detected, a popup appears with details and you choose whether to proceed
+5. **Email Notification**: If you proceed despite the warning, an email is sent to your administrator with incident details
+6. **Audit Logging**: All scans are logged in the database for review in the web dashboard
 
+## Email Notifications
+
+When a user proceeds despite a warning, the administrator receives an email containing:
+- User information (username and email)
+- Timestamp of the incident
+- Platform where it occurred (ChatGPT, Claude.ai, DeepSeek)
+- Risk assessment (score and AI category)
+- Types of sensitive data detected (without revealing the actual values)
+- Text preview of the submission
+
+## Security & Privacy
+
+- All AI detection runs locally on your machine
+- No sensitive data is sent to external services
+- User passwords are hashed with Argon2
+- Session management uses JWT tokens
+- Database is stored locally in SQLite
+
+## License
+
+MIT License
+
+## Acknowledgments
+
+- Sentence Transformers by UKPLab
+- FastAPI framework by Sebastián Ramírez
+- Chrome Extension development documentation by Google

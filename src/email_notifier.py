@@ -69,8 +69,7 @@ class EmailNotifier:
     {analysis_result['explanation']}
 
     ACTION TAKEN:
-    The user was warned but chose to proceed. This content has been logged 
-    for your review.
+    The user was warned but chose to proceed. This content has been logged for your review.
 
     NEXT STEPS:
     1. Review the incident details above
