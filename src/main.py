@@ -137,7 +137,18 @@ def user_proceeded_with_warning(
     # Re-analyze to get the warning details
     result = detection_engine.analyze(request.text)
     
-    print(f"📧 User proceeded despite warning! Sending email notifications...")
+    # Get platform from referrer header
+    referrer = req.headers.get('referer', '')
+    platform = 'Unknown Platform'
+    if 'chatgpt.com' in referrer or 'chat.openai.com' in referrer:
+        platform = 'ChatGPT'
+    elif 'claude.ai' in referrer:
+        platform = 'Claude.ai'
+    elif 'deepseek.com' in referrer:
+        platform = 'DeepSeek'
+    
+    print(f"📧 User {current_user.username} proceeded despite warning on {platform}!")
+    print(f"   Sending email notifications...")
     
     # Send to boss
     boss_notified = email_notifier.send_blocked_content_alert(
@@ -145,7 +156,8 @@ def user_proceeded_with_warning(
         boss_email=current_user.notification_email,
         username=current_user.username,
         analysis_result=result,
-        text_preview=request.text[:200]
+        text_preview=request.text[:200],
+        platform=platform  # NEW: Pass platform
     )
     
     # Send confirmation to user
@@ -158,6 +170,7 @@ def user_proceeded_with_warning(
     )
     
     return {"status": "emails_sent", "boss_notified": boss_notified}
+
 
 @app.get("/api/history", response_model=list[ScanLogResponse])
 def get_scan_history(

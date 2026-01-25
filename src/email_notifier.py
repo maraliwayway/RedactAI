@@ -22,52 +22,63 @@ class EmailNotifier:
             print("⚠️  Email not configured. Set credentials in .env file")
     
     def send_blocked_content_alert(
-        self,
-        user_email: str,
-        boss_email: str,
-        username: str,
-        analysis_result: Dict,
-        text_preview: str
+    self,
+    user_email: str,
+    boss_email: str,
+    username: str,
+    analysis_result: Dict,
+    text_preview: str,
+    platform: str = "Unknown Platform"  # NEW: Add platform
     ) -> bool:
         """
-        Send email to boss when user tries to send blocked content.
+        Send email to boss when user tries to send sensitive content.
         """
         if not all([self.smtp_username, self.smtp_password]):
             print("❌ Email not configured, skipping notification")
             return False
         
-        subject = f"🚨 RedactAI Alert: {username} attempted to send sensitive data"
+        # Get detection types for summary (no actual values)
+        detection_types = []
+        if analysis_result['regex_detections']:
+            detection_types = [d['type'].replace('_', ' ').title() for d in analysis_result['regex_detections']]
+        
+        subject = f"RedactAI Security Alert: {username} attempted to send sensitive data"
         
         # Create email body
         body = f"""
-RedactAI Security Alert
-{'=' * 60}
+    RedactAI Security Alert
+    {'=' * 70}
 
-User: {username} ({user_email})
-Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-Decision: {analysis_result['decision']}
-Risk Score: {analysis_result['overall_risk_score']}/100
+    INCIDENT DETAILS:
+    - User: {username}
+    - User Email: {user_email}
+    - Timestamp: {datetime.now().strftime('%Y-%m-%d at %H:%M:%S %Z')}
+    - Platform: {platform}
 
-AI Classification:
-- Category: {analysis_result['ai_category']}
-- Confidence: {analysis_result['ai_confidence']:.1%}
+    RISK ASSESSMENT:
+    - Decision: {analysis_result['decision']}
+    - Risk Score: {analysis_result['overall_risk_score']}/100
+    - AI Category: {analysis_result['ai_category']}
+    - AI Confidence: {analysis_result['ai_confidence']:.1%}
 
-Detections Found:
-- Regex Detections: {len(analysis_result['regex_detections'])}
-- Detection Types: {', '.join(set(d['type'] for d in analysis_result['regex_detections'])) if analysis_result['regex_detections'] else 'None'}
+    WHAT WAS DETECTED:
+    - Number of Detections: {len(analysis_result['regex_detections'])}
+    - Types of Sensitive Data: {', '.join(set(detection_types)) if detection_types else 'AI flagged as sensitive'}
 
-Explanation:
-{analysis_result['explanation']}
+    EXPLANATION:
+    {analysis_result['explanation']}
 
-Text Preview (first 200 characters):
-{'-' * 60}
-{text_preview}
-{'-' * 60}
+    ACTION TAKEN:
+    The user was warned but chose to proceed. This content has been logged 
+    for your review.
 
-This content was flagged as {analysis_result['decision']} and the user was notified.
+    NEXT STEPS:
+    1. Review the incident details above
+    2. Contact {username} if needed to discuss data handling policies
 
----
-RedactAI - Local AI Gatekeeper
+    ---
+    RedactAI - Local AI Security System
+    Protecting your organization's sensitive data
         """
         
         try:
@@ -89,63 +100,7 @@ RedactAI - Local AI Gatekeeper
             
         except Exception as e:
             print(f"❌ Failed to send email: {e}")
-            return False
-    
-    def send_user_confirmation(
-        self,
-        user_email: str,
-        username: str,
-        analysis_result: Dict,
-        text_preview: str,
-        boss_notified: bool
-    ) -> bool:
-        """
-        Send confirmation email to user about what was detected.
-        """
-        if not all([self.smtp_username, self.smtp_password]):
-            return False
-        
-        subject = f"RedactAI: Your content analysis for {datetime.now().strftime('%Y-%m-%d')}"
-        
-        body = f"""
-Hello {username},
-
-RedactAI detected potentially sensitive content in your recent input.
-
-Decision: {analysis_result['decision']}
-Risk Score: {analysis_result['overall_risk_score']}/100
-Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-
-{analysis_result['explanation']}
-
-Text Preview:
-{'-' * 60}
-{text_preview}
-{'-' * 60}
-
-{"⚠️  Your administrator has been notified of this attempt." if boss_notified else ""}
-
-For your reference, this analysis has been logged.
-
-Best regards,
-RedactAI Security System
-        """
-        
-        try:
-            message = MIMEMultipart()
-            message['From'] = self.from_email
-            message['To'] = user_email
-            message['Subject'] = subject
-            message.attach(MIMEText(body, 'plain'))
-            
-            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
-                server.starttls()
-                server.login(self.smtp_username, self.smtp_password)
-                server.send_message(message)
-            
-            print(f"✅ Confirmation email sent to {user_email}")
-            return True
-            
-        except Exception as e:
-            print(f"❌ Failed to send confirmation email: {e}")
+            print(f"Error details: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return False
