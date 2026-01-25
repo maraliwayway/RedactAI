@@ -38,4 +38,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     // Keep channel open for async response
     return true;
   }
+  
+  // NEW: Handle user proceeding despite warning
+  if (request.action === 'userProceeded') {
+    console.log('Background: User proceeded, sending emails...');
+    
+    fetch(`${API_URL}/api/user-proceeded`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ text: request.text })
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Background: Emails sent');
+      sendResponse({ success: true, data: data });
+    })
+    .catch(error => {
+      console.error('Background: Error sending emails:', error);
+      sendResponse({ success: false, error: error.message });
+    });
+    
+    return true;
+  }
 });

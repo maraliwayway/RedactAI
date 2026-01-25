@@ -104,9 +104,9 @@ function showWarning(result, inputElement, sendButton) {
   
   overlay.innerHTML = `
     <div class="redactai-modal">
-      <div class="redactai-header ${result.decision.toLowerCase()}">
-        <span class="redactai-icon">${icon}</span>
-        <h2>${title}: Sensitive Content Detected</h2>
+      <div class="redactai-header warn">
+        <span class="redactai-icon">⚠️</span>
+        <h2>WARNING: Sensitive Content Detected</h2>
       </div>
       <div class="redactai-content">
         <div class="redactai-score">
@@ -128,25 +128,17 @@ function showWarning(result, inputElement, sendButton) {
             </ul>
           </div>
         ` : ''}
-        ${result.decision === 'BLOCK' ? `
-          <div class="redactai-warning-text">
-            ⚠️ <strong>Your administrator will be notified if you proceed.</strong>
-          </div>
-        ` : ''}
+        <div class="redactai-warning-text">
+          ⚠️ <strong>If you proceed, your administrator will be notified.</strong>
+        </div>
       </div>
       <div class="redactai-actions">
         <button id="redactai-cancel" class="redactai-btn redactai-btn-cancel">
           Cancel & Edit
         </button>
-        ${result.decision === 'BLOCK' ? `
-          <button id="redactai-proceed" class="redactai-btn redactai-btn-danger">
-            Send Anyway (Boss Will Be Notified)
-          </button>
-        ` : `
-          <button id="redactai-proceed" class="redactai-btn redactai-btn-warning">
-            Proceed
-          </button>
-        `}
+        <button id="redactai-proceed" class="redactai-btn redactai-btn-warning">
+          Proceed Anyway (Boss Will Be Notified)
+        </button>
       </div>
     </div>
   `;
@@ -159,10 +151,25 @@ function showWarning(result, inputElement, sendButton) {
     inputElement.focus();
   });
 
-  document.getElementById('redactai-proceed').addEventListener('click', () => {
+  document.getElementById('redactai-proceed').addEventListener('click', async () => {
+    console.log('User clicked Proceed - sending emails...');
     overlay.remove();
-    // Allow submission
-    lastAnalyzedText = getInputText(inputElement);
+    
+    // Get the text
+    const text = getInputText(inputElement);
+    
+    // Send notification that user proceeded
+    chrome.runtime.sendMessage(
+      { action: 'userProceeded', text: text },
+      (response) => {
+        if (response && response.success) {
+          console.log('✅ Boss notified!');
+        }
+      }
+    );
+    
+    // Allow submission to LLM
+    lastAnalyzedText = text;
     sendButton.click();
   });
 }

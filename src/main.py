@@ -117,32 +117,47 @@ def analyze_text(
     db.add(log)
     db.commit()
     
-    # Send email notifications if BLOCKED
-    if result['decision'] == 'BLOCK':
-        print(f"📧 Sending email notifications for blocked content...")
-        
-        # Send to boss
-        boss_notified = email_notifier.send_blocked_content_alert(
-            user_email=current_user.email,
-            boss_email=current_user.notification_email,
-            username=current_user.username,
-            analysis_result=result,
-            text_preview=request.text[:200]
-        )
-        
-        # Send confirmation to user
-        email_notifier.send_user_confirmation(
-            user_email=current_user.email,
-            username=current_user.username,
-            analysis_result=result,
-            text_preview=request.text[:200],
-            boss_notified=boss_notified
-        )
-    
     return {
         **result,
         "timestamp": datetime.utcnow()
     }
+
+@app.post("/api/user-proceeded")
+def user_proceeded_with_warning(
+    request: TextAnalysisRequest,
+    req: Request,
+    db: Session = Depends(get_db)
+):
+    """Called when user proceeds despite warning - sends email to boss."""
+    current_user = get_current_user(req, db)
+    
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    # Re-analyze to get the warning details
+    result = detection_engine.analyze(request.text)
+    
+    print(f"📧 User proceeded despite warning! Sending email notifications...")
+    
+    # Send to boss
+    boss_notified = email_notifier.send_blocked_content_alert(
+        user_email=current_user.email,
+        boss_email=current_user.notification_email,
+        username=current_user.username,
+        analysis_result=result,
+        text_preview=request.text[:200]
+    )
+    
+    # Send confirmation to user
+    email_notifier.send_user_confirmation(
+        user_email=current_user.email,
+        username=current_user.username,
+        analysis_result=result,
+        text_preview=request.text[:200],
+        boss_notified=boss_notified
+    )
+    
+    return {"status": "emails_sent", "boss_notified": boss_notified}
 
 @app.get("/api/history", response_model=list[ScanLogResponse])
 def get_scan_history(

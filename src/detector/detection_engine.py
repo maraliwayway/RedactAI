@@ -62,15 +62,9 @@ class DetectionEngine:
         return min(overall, 100)
     
     def _make_decision(self, risk_score: int, regex_detections: List, ai_category: str) -> str:
-        """Make final decision: SAFE, WARN, or BLOCK."""
-        # High-severity regex detections = automatic block
-        high_severity_found = any(
-            d.get('severity') == 'HIGH' for d in regex_detections
-        )
-        
-        if high_severity_found or risk_score >= 70:
-            return 'BLOCK'
-        elif risk_score >= 40 or ai_category in ['credentials', 'personal_data']:
+        """Make final decision: SAFE or WARN (NO BLOCK)."""
+        # Any detection or risk over 30 = WARNING
+        if risk_score >= 30 or len(regex_detections) > 0 or ai_category in ['credentials', 'personal_data', 'proprietary_info']:
             return 'WARN'
         else:
             return 'SAFE'
@@ -86,10 +80,8 @@ class DetectionEngine:
         if ai_category != 'safe':
             parts.append(f"AI detected: {ai_category.replace('_', ' ').title()}")
         
-        if decision == 'BLOCK':
-            parts.append("❌ This content should NOT be sent.")
-        elif decision == 'WARN':
-            parts.append("⚠️  Review carefully before sending.")
+        if decision == 'WARN':
+            parts.append("⚠️ Review carefully before sending.")
         else:
             parts.append("✅ Content appears safe.")
         
