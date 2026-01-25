@@ -1,4 +1,4 @@
-console.log('RedactAI Extension loaded');
+console.log('🛡️ RedactAI Extension loaded');
 
 // Configuration
 const API_URL = 'http://localhost:8000';
@@ -53,38 +53,52 @@ async function analyzeText(text) {
   console.log('📡 Sending text to background script for analysis...');
   
   return new Promise((resolve) => {
-    chrome.runtime.sendMessage(
-      { action: 'analyzeText', text: text },
-      (response) => {
-        if (chrome.runtime.lastError) {
-          console.error('❌ Chrome runtime error:', chrome.runtime.lastError);
-          resolve(null);
-          return;
-        }
+    try {
+      chrome.runtime.sendMessage(
+        { action: 'analyzeText', text: text },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            console.error('❌ Chrome runtime error:', chrome.runtime.lastError);
+            
+            // Check if extension context was invalidated
+            if (chrome.runtime.lastError.message.includes('Extension context invalidated')) {
+              alert('⚠️ RedactAI extension was reloaded. Please refresh this page to continue protection.');
+            }
+            
+            resolve(null);
+            return;
+          }
 
-        if (!response) {
-          console.error('❌ No response from background script');
-          resolve(null);
-          return;
-        }
+          if (!response) {
+            console.error('❌ No response from background script');
+            resolve(null);
+            return;
+          }
 
-        if (response.success === false) {
-          console.error('❌ API error:', response.error);
-          resolve(null);
-          return;
-        }
+          if (response.success === false) {
+            console.error('❌ API error:', response.error);
+            resolve(null);
+            return;
+          }
 
-        if (response.data && response.data.error === 'NOT_AUTHENTICATED') {
-          console.error('❌ Not authenticated');
-          alert('⚠️ Please log in to RedactAI at http://localhost:8000 first!');
-          resolve(null);
-          return;
-        }
+          if (response.data && response.data.error === 'NOT_AUTHENTICATED') {
+            console.error('❌ Not authenticated');
+            alert('⚠️ Please log in to RedactAI at http://localhost:8000 first!');
+            resolve(null);
+            return;
+          }
 
-        console.log('✅ Analysis result:', response.data);
-        resolve(response.data);
+          console.log('✅ Analysis result:', response.data);
+          resolve(response.data);
+        }
+      );
+    } catch (error) {
+      console.error('❌ Extension error:', error);
+      if (error.message.includes('Extension context invalidated')) {
+        alert('⚠️ RedactAI extension was reloaded. Please refresh this page to continue protection.');
       }
-    );
+      resolve(null);
+    }
   });
 }
 
@@ -103,7 +117,7 @@ function showWarning(result, inputElement, sendButton) {
     <div class="redactai-modal">
       <div class="redactai-header warn">
         <span class="redactai-icon">⚠️</span>
-        <h2>Sensitive Content Detected</h2>
+        <h2>WARNING</h2>
       </div>
       <div class="redactai-content">
         <div class="redactai-score">
@@ -159,14 +173,22 @@ function showWarning(result, inputElement, sendButton) {
     const text = getInputText(inputElement);
     
     // Send notification that user proceeded
-    chrome.runtime.sendMessage(
-      { action: 'userProceeded', text: text },
-      (response) => {
-        if (response && response.success) {
-          console.log('✅ Boss notified!');
+    try {
+      chrome.runtime.sendMessage(
+        { action: 'userProceeded', text: text },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            console.error('❌ Error notifying administrator:', chrome.runtime.lastError);
+            return;
+          }
+          if (response && response.success) {
+            console.log('✅ Boss notified!');
+          }
         }
-      }
-    );
+      );
+    } catch (error) {
+      console.error('❌ Extension error:', error);
+    }
     
     // Allow submission to LLM
     lastAnalyzedText = text;
@@ -236,7 +258,7 @@ function initializeMonitoring() {
     return;
   }
 
-  console.log('RedactAI: Initializing monitoring...');
+  console.log('🛡️ RedactAI: Initializing monitoring...');
 
   // Wait for elements to load
   const checkInterval = setInterval(() => {
