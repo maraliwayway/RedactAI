@@ -1,0 +1,152 @@
+/* RedactAI Overlay Styles */
+.redactai-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999999;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  
+  .redactai-modal {
+    background: white;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    animation: slideIn 0.3s ease-out;
+  }
+  
+  @keyframes slideIn {
+    from {
+      transform: translateY(-50px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  .redactai-header {
+    padding: 20px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .redactai-header.warn {
+    background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%);
+  }
+  
+  .redactai-header.block {
+    background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+  }
+  
+  .redactai-icon {
+    font-size: 32px;
+  }
+  
+  .redactai-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+  }
+  
+  .redactai-content {
+    padding: 24px;
+    color: #333;
+  }
+  
+  .redactai-score,
+  .redactai-category,
+  .redactai-explanation,
+  .redactai-detections {
+    margin-bottom: 16px;
+  }
+  
+  .redactai-score strong,
+  .redactai-category strong,
+  .redactai-explanation strong,
+  .redactai-detections strong {
+    display: block;
+    margin-bottom: 6px;
+    color: #666;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .redactai-detections ul {
+    margin: 0;
+    padding-left: 20px;
+  }
+  
+  .redactai-detections li {
+    margin: 4px 0;
+    text-transform: capitalize;
+  }
+  
+  .redactai-warning-text {
+    background: #fff3e0;
+    border-left: 4px solid #ff9800;
+    padding: 12px;
+    margin-top: 16px;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  .redactai-actions {
+    display: flex;
+    gap: 12px;
+    padding: 20px 24px;
+    background: #f5f5f5;
+    border-top: 1px solid #e0e0e0;
+  }
+  
+  .redactai-btn {
+    flex: 1;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .redactai-btn-cancel {
+    background: white;
+    color: #333;
+    border: 2px solid #ddd;
+  }
+  
+  .redactai-btn-cancel:hover {
+    background: #f5f5f5;
+    border-color: #bbb;
+  }
+  
+  .redactai-btn-warning {
+    background: #ff9800;
+    color: white;
+  }
+  
+  .redactai-btn-warning:hover {
+    background: #fb8c00;
+  }
+  
+  .redactai-btn-danger {
+    background: #f44336;
+    color: white;
+  }
+  
+  .redactai-btn-danger:hover {
+    background: #e53935;
+  }

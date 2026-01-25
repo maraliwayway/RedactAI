@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - RedactAI{% endblock %}
+
+{% block content %}
+<div class="container dashboard-container">
+    <div class="header">
+        <div>
+            <h1>🛡️ RedactAI Dashboard</h1>
+            <h2>Welcome, {{ user.username }}!</h2>
+        </div>
+        <a href="/logout"><button class="logout-btn">Logout</button></a>
+    </div>
+    
+    <div class="form-group">
+        <label for="text">Paste your text to analyze:</label>
+        <textarea id="text" placeholder="Enter the text you want to send to an LLM..."></textarea>
+    </div>
+    
+    <button onclick="analyzeText()">🔍 Analyze Text</button>
+    
+    <div id="result"></div>
+    
+    <div class="history">
+        <h2>Recent Scans</h2>
+        <div id="history"></div>
+    </div>
+</div>
+
+<script>
+    async function analyzeText() {
+        const text = document.getElementById('text').value;
+        if (!text) {
+            alert('Please enter some text');
+            return;
+        }
+        
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = '<p>Analyzing...</p>';
+        
+        try {
+            const response = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: text })
+            });
+            
+            if (response.status === 401) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            const data = await response.json();
+            
+            let className = 'safe';
+            let icon = '✅';
+            if (data.decision === 'WARN') {
+                className = 'warn';
+                icon = '⚠️';
+            } else if (data.decision === 'BLOCK') {
+                className = 'block';
+                icon = '❌';
+            }
+            
+            resultDiv.className = `result ${className}`;
+            resultDiv.innerHTML = `
+                <h3>${icon} ${data.decision}</h3>
+                <p><strong>Risk Score:</strong> ${data.overall_risk_score}/100</p>
+                <p><strong>AI Category:</strong> ${data.ai_category} (${(data.ai_confidence * 100).toFixed(1)}% confidence)</p>
+                <p><strong>Detections:</strong> ${data.regex_detections.length}</p>
+                <p><strong>Explanation:</strong> ${data.explanation}</p>
+            `;
+            
+            loadHistory();
+        } catch (error) {
+            resultDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+        }
+    }
+    
+    async function loadHistory() {
+        try {
+            const response = await fetch('/api/history');
+            const logs = await response.json();
+            
+            const historyDiv = document.getElementById('history');
+            if (logs.length === 0) {
+                historyDiv.innerHTML = '<p>No scans yet</p>';
+                return;
+            }
+            
+            historyDiv.innerHTML = logs.map(log => `
+                <div class="history-item">
+                    <strong>${log.decision}</strong> (Risk: ${log.risk_score}/100) - 
+                    ${new Date(log.timestamp).toLocaleString()}<br>
+                    <small>${log.text_preview}</small>
+                </div>
+            `).join('');
+        } catch (error) {
+            console.error('Error loading history:', error);
+        }
+    }
+    
+    // Load history on page load
+    loadHistory();
+</script>
+{% endblock %}
