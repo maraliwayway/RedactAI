@@ -148,28 +148,28 @@ def user_proceeded_with_warning(
         platform = 'DeepSeek'
     
     print(f"📧 User {current_user.username} proceeded despite warning on {platform}!")
-    print(f"   Sending email notifications...")
+    print(f"   Sending email notification to administrator...")
     
-    # Send to boss
+    # Send email to administrator
     boss_notified = email_notifier.send_blocked_content_alert(
         user_email=current_user.email,
         boss_email=current_user.notification_email,
         username=current_user.username,
         analysis_result=result,
         text_preview=request.text[:200],
-        platform=platform  # NEW: Pass platform
+        platform=platform
     )
     
-    # Send confirmation to user
-    email_notifier.send_user_confirmation(
-        user_email=current_user.email,
-        username=current_user.username,
-        analysis_result=result,
-        text_preview=request.text[:200],
-        boss_notified=boss_notified
-    )
+    if boss_notified:
+        print(f"   ✅ Administrator notified successfully")
+    else:
+        print(f"   ⚠️ Failed to notify administrator")
     
-    return {"status": "emails_sent", "boss_notified": boss_notified}
+    return {
+        "status": "notification_sent" if boss_notified else "notification_failed",
+        "administrator_notified": boss_notified,
+        "platform": platform
+    }
 
 
 @app.get("/api/history", response_model=list[ScanLogResponse])

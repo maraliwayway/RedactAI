@@ -1,4 +1,4 @@
-console.log('🛡️ RedactAI Extension loaded');
+console.log('RedactAI Extension loaded');
 
 // Configuration
 const API_URL = 'http://localhost:8000';
@@ -99,14 +99,11 @@ function showWarning(result, inputElement, sendButton) {
   overlay.id = 'redactai-overlay';
   overlay.className = `redactai-overlay ${result.decision.toLowerCase()}`;
 
-  const icon = result.decision === 'BLOCK' ? '🚨' : '⚠️';
-  const title = result.decision === 'BLOCK' ? 'BLOCKED' : 'WARNING';
-  
   overlay.innerHTML = `
     <div class="redactai-modal">
       <div class="redactai-header warn">
         <span class="redactai-icon">⚠️</span>
-        <h2>WARNING: Sensitive Content Detected</h2>
+        <h2>Sensitive Content Detected</h2>
       </div>
       <div class="redactai-content">
         <div class="redactai-score">
@@ -132,12 +129,15 @@ function showWarning(result, inputElement, sendButton) {
           ⚠️ <strong>If you proceed, your administrator will be notified.</strong>
         </div>
       </div>
+      <div class="redactai-button-explanation">
+        <strong>Cancel</strong> to edit your message, or <strong>Send Anyway</strong> (boss will be notified)
+      </div>
       <div class="redactai-actions">
         <button id="redactai-cancel" class="redactai-btn redactai-btn-cancel">
-          Cancel & Edit
+          Cancel
         </button>
         <button id="redactai-proceed" class="redactai-btn redactai-btn-warning">
-          Proceed Anyway (Boss Will Be Notified)
+          Send Anyway
         </button>
       </div>
     </div>
@@ -236,7 +236,7 @@ function initializeMonitoring() {
     return;
   }
 
-  console.log('🛡️ RedactAI: Initializing monitoring...');
+  console.log('RedactAI: Initializing monitoring...');
 
   // Wait for elements to load
   const checkInterval = setInterval(() => {
