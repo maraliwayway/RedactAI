@@ -2,6 +2,14 @@
 
 A local AI-powered security tool that prevents sensitive information from being accidentally sent to Large Language Models (LLMs).
 
+## Team
+
+**Team Name:** ww (west wics)
+
+**Team Members:**
+- **Mara David** ([@maraliwayway](https://github.com/maraliwayway)) - Frontend, Backend, AI/ML Engineer
+- **Amandeep Manan** ([@amandeepmanan04](https://github.com/amandeepmanan04)) - Designer, UI/UX Researcher, Pitcher
+
 ## Problem Statement
 
 As students and professionals increasingly rely on large language models for coding, debugging, and writing assistance, they often unknowingly expose sensitive information such as API keys, credentials, internal code, or personal data when submitting prompts to LLMs. Despite security policies and training, manual caution is unreliable, especially under time pressure. Once sensitive data is sent to a cloud-hosted LLM, organizations lose control over where that data is processed or stored, creating data sovereignty, privacy, and compliance risks.
@@ -300,9 +308,3 @@ When a user proceeds despite a warning, the administrator receives an email cont
 ## License
 
 MIT License
-
-## Acknowledgments
-
-- Sentence Transformers by UKPLab
-- FastAPI framework by Sebastián Ramírez
-- Chrome Extension development documentation by Google
