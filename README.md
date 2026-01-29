@@ -4,8 +4,6 @@ A local AI-powered security tool that prevents sensitive information from being 
 
 ## Team
 
-**Team Name:** ww (west wics)
-
 **Team Members:**
 - **Mara David** ([@maraliwayway](https://github.com/maraliwayway)) - Frontend, Backend, AI/ML Engineer
 - **Amandeep Manan** ([@amandeepmanan04](https://github.com/amandeepmanan04)) - Designer, UI/UX Researcher, Pitcher
@@ -31,12 +29,12 @@ RedactAI is a browser extension and local backend service that autonomously anal
 ### Security & Compliance
 - Fully local AI processing using Sentence Transformers (no external API calls for detection)
 - Email notifications to administrators when users proceed despite warnings
-- Platform detection (ChatGPT, Claude.ai, DeepSeek)
+- Platform detection (ChatGPT only)
 - Comprehensive audit logging of all scan attempts
 - User confirmation emails for transparency
 
 ### User Experience
-- Browser extension for ChatGPT, Claude.ai, and DeepSeek
+- Browser extension for ChatGPT
 - Web dashboard for scan history and manual text analysis
 - User authentication and session management
 - Intuitive warning popups with clear explanations
