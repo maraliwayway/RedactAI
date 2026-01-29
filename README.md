@@ -3,8 +3,6 @@
 A local AI-powered security tool that prevents sensitive information from being accidentally sent to Large Language Models (LLMs).
 
 ## Team
-
-**Team Members:**
 - **Mara David** ([@maraliwayway](https://github.com/maraliwayway)) - Frontend, Backend, AI/ML Engineer
 - **Amandeep Manan** ([@amandeepmanan04](https://github.com/amandeepmanan04)) - Designer, UI/UX Researcher, Pitcher
 
